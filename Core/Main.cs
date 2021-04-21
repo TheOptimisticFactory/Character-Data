@@ -590,7 +590,8 @@ namespace CharacterData.Core
 
             //public static Vector2 PlayerToScreen => MainPlugin.GameController.Game.IngameState.Camera.WorldToScreen(Entity.Pos.Translate(0.0f, 0.0f), Entity);
 
-            public static bool HasBuff(string buffName) => Entity.GetComponent<Life>().HasBuff(buffName);
+            // public static bool HasBuff(string buffName) => Entity.GetComponent<Life>().HasBuff(buffName);
+            public static bool HasBuff(string buffName) => Entity.HasComponent<Buffs>() ? Entity.GetComponent<Buffs>().HasBuff(buffName) : false;
         }
     }
 }
