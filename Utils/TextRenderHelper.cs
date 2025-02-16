@@ -11,18 +11,13 @@ public static class TextRenderHelper
     {
         var lineHeight = ImGui.GetTextLineHeight();
         for (var i = 0; i < lines.Length; i++)
-        {
-            graphics.DrawText(lines[i], position with {Y = position.Y + lineHeight * i}, colors[i]);
-        }
+            graphics.DrawText(lines[i], position with { Y = position.Y + lineHeight * i }, colors[i]);
     }
 
     public static void DrawMultilineText(Graphics graphics, string[] lines, Vector2 position, Color color)
     {
         var colors = new Color[lines.Length];
-        for (var i = 0; i < lines.Length; i++)
-        {
-            colors[i] = color;
-        }
+        for (var i = 0; i < lines.Length; i++) colors[i] = color;
 
         DrawMultilineText(graphics, lines, position, colors);
     }
