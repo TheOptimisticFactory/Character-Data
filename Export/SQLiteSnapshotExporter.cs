@@ -9,6 +9,13 @@ namespace CharacterData.Export;
 
 public class SqLiteSnapshotExporter : ISnapshotExporter, IDisposable
 {
+    private static readonly JsonSerializerSettings SerializerSettings = new()
+    {
+        DefaultValueHandling = DefaultValueHandling.Ignore,
+        NullValueHandling = NullValueHandling.Ignore,
+        MissingMemberHandling = MissingMemberHandling.Ignore
+    };
+
     private SqliteConnection _connection;
     private string _dbPath;
 
@@ -45,7 +52,7 @@ public class SqLiteSnapshotExporter : ISnapshotExporter, IDisposable
 
             cmd.Parameters.AddWithValue("@character_name", characterName);
             cmd.Parameters.AddWithValue("@snapshot_time", snapshot.SnapshotTime);
-            cmd.Parameters.AddWithValue("@snapshot_data", JsonConvert.SerializeObject(snapshot));
+            cmd.Parameters.AddWithValue("@snapshot_data", JsonConvert.SerializeObject(snapshot, SerializerSettings));
 
             cmd.ExecuteNonQuery();
         }

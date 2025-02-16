@@ -9,6 +9,13 @@ namespace CharacterData.Export;
 
 public class JsonSnapshotExporter : ISnapshotExporter
 {
+    private static readonly JsonSerializerSettings SerializerSettings = new()
+    {
+        DefaultValueHandling = DefaultValueHandling.Ignore,
+        NullValueHandling = NullValueHandling.Ignore,
+        MissingMemberHandling = MissingMemberHandling.Ignore
+    };
+
     public void Initialize()
     {
     }
@@ -44,7 +51,7 @@ public class JsonSnapshotExporter : ISnapshotExporter
             try
             {
                 var existingJson = File.ReadAllText(filePath);
-                snapshots = JsonConvert.DeserializeObject<List<SnapshotData>>(existingJson) ?? [];
+                snapshots = JsonConvert.DeserializeObject<List<SnapshotData>>(existingJson, SerializerSettings) ?? [];
             }
             catch (Exception ex)
             {
@@ -58,7 +65,7 @@ public class JsonSnapshotExporter : ISnapshotExporter
 
         try
         {
-            var json = JsonConvert.SerializeObject(snapshots, Formatting.None);
+            var json = JsonConvert.SerializeObject(snapshots, Formatting.None, SerializerSettings);
             File.WriteAllText(filePath, json);
         }
         catch (Exception ex)

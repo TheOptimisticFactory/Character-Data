@@ -8,6 +8,13 @@ namespace CharacterData.Export;
 
 public class PostgresSnapshotExporter : ISnapshotExporter, IDisposable
 {
+    private static readonly JsonSerializerSettings SerializerSettings = new()
+    {
+        DefaultValueHandling = DefaultValueHandling.Ignore,
+        NullValueHandling = NullValueHandling.Ignore,
+        MissingMemberHandling = MissingMemberHandling.Ignore
+    };
+
     private string _currentConnectionString;
     private NpgsqlDataSource _dataSource;
 
@@ -41,7 +48,7 @@ public class PostgresSnapshotExporter : ISnapshotExporter, IDisposable
             using var conn = _dataSource.CreateConnection();
             conn.Open();
 
-            var snapshotJson = JsonConvert.SerializeObject(snapshot);
+            var snapshotJson = JsonConvert.SerializeObject(snapshot, SerializerSettings);
             using var cmd = conn.CreateCommand();
             cmd.CommandText = @"
                 INSERT INTO snapshots (character_name, snapshot_time, snapshot_data)

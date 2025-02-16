@@ -21,6 +21,9 @@ public class PlayerData
 {
     public int Level { get; set; }
     public long Xp { get; set; }
+    public int MaxHP { get; set; }
+    public int MaxES { get; set; }
+    public int MaxMana { get; set; }
     public XpData XpData { get; set; }
     public RunsData Runs { get; set; }
     public KillsData Kills { get; set; }

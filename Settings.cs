@@ -27,7 +27,8 @@ public class Settings : ISettings
 public class ExportSettings
 {
     public ToggleNode Enabled { get; set; } = new(true);
-    public ToggleNode LogAllAreaChanges { get; set; } = new(false);
+    [Menu("Ignore Conditional Log Checks", "This will ignore logging regardless if we have increased kills or gained xp\nThis does not override logging Peaceful areas.")]
+    public ToggleNode DisableConditionalShouldLogChecks { get; set; } = new(false);
     public JsonSettings JsonSettings { get; set; } = new();
     public MongoSettings MongoSettings { get; set; } = new();
     public PostgresSettings PostgresSettings { get; set; } = new();

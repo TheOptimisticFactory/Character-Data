@@ -9,6 +9,13 @@ namespace CharacterData.Export;
 
 public class MongoSnapshotExporter : ISnapshotExporter, IDisposable
 {
+    private static readonly JsonSerializerSettings SerializerSettings = new()
+    {
+        DefaultValueHandling = DefaultValueHandling.Ignore,
+        NullValueHandling = NullValueHandling.Ignore,
+        MissingMemberHandling = MissingMemberHandling.Ignore
+    };
+
     private string _currentConnectionString;
     private IMongoClient _mongoClient;
 
@@ -38,7 +45,7 @@ public class MongoSnapshotExporter : ISnapshotExporter, IDisposable
             var database = _mongoClient.GetDatabase(Plugin.Settings.InstanceExportSettings.MongoSettings.Database);
             var collection = database.GetCollection<BsonDocument>(characterName);
 
-            var snapshotJson = JsonConvert.SerializeObject(snapshot, Formatting.None);
+            var snapshotJson = JsonConvert.SerializeObject(snapshot, Formatting.None, SerializerSettings);
             var snapshotDoc = BsonDocument.Parse(snapshotJson);
 
             collection.InsertOne(snapshotDoc);

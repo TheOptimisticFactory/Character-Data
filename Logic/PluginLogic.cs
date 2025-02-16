@@ -96,7 +96,10 @@ public static class PluginLogic
         if (!Plugin.Settings.InstanceExportSettings.Enabled)
             return false;
 
-        if (Plugin.Settings.InstanceExportSettings.LogAllAreaChanges)
+        if (_currentInstance.Area.IsPeaceful)
+            return false;
+
+        if (Plugin.Settings.InstanceExportSettings.DisableConditionalShouldLogChecks)
             return true;
 
         var player = Plugin.GameController.Player?.GetComponent<Player>();
@@ -111,24 +114,34 @@ public static class PluginLogic
 
     private static SnapshotData CreateSnapshot()
     {
-        var player = Plugin.GameController.Player?.GetComponent<Player>();
-        if (player == null)
+        var playerComp = Plugin.GameController.Player?.GetComponent<Player>();
+        if (playerComp == null)
+        {
+            Plugin.LogError("[CreateSnapshot] playerComp == null", 10);
             return null;
+        }
+
+        var lifeComp = Plugin.GameController.Player?.GetComponent<Life>();
+        if (lifeComp == null)
+        {
+            Plugin.LogError("[CreateSnapshot] lifeComp == null", 10);
+            return null;
+        }
 
         var currentKills = TryGetStat(GameStat.CharacterKillCount);
-        long currentXp = player.XP;
-        var progressPct = CharacterUtils.CalculateProgress(player.Level, player.XP);
+        long currentXp = playerComp.XP;
+        var progressPct = CharacterUtils.CalculateProgress(playerComp.Level, playerComp.XP);
         var xpGained = currentXp - _currentInstance.JoinExperience;
-        var levelPercent = CharacterUtils.GetLevelGainPercent(player.Level, xpGained);
+        var levelPercent = CharacterUtils.GetLevelGainPercent(playerComp.Level, xpGained);
         var timeElapsed = (DateTime.Now - _currentInstance.JoinTime).TotalSeconds;
         var xpPerHour = timeElapsed > 0 ? xpGained / timeElapsed * 3600 : 0.0;
 
-        var runsToNext = CharacterUtils.GetRunsToNextLevel(player.Level, player.XP, xpGained);
-        var totalRuns = CharacterUtils.GetTotalRuns(player.Level, xpGained);
+        var runsToNext = CharacterUtils.GetRunsToNextLevel(playerComp.Level, playerComp.XP, xpGained);
+        var totalRuns = CharacterUtils.GetTotalRuns(playerComp.Level, xpGained);
         var timeToLevelSecs = CharacterUtils.GetTimeToLevelSeconds(
-            xpGained, timeElapsed, player.Level, player.XP);
+            xpGained, timeElapsed, playerComp.Level, playerComp.XP);
 
-        var areaDiff = player.Level - Plugin.GameController.Game.IngameState.Data.CurrentAreaLevel;
+        var areaDiff = playerComp.Level - Plugin.GameController.Game.IngameState.Data.CurrentAreaLevel;
         var areaKills = currentKills - _currentInstance.JoinKills;
 
         var xpPerMobAvg = areaKills > 0 ? (double)xpGained / areaKills : (double?)null;
@@ -180,8 +193,11 @@ public static class PluginLogic
             },
             Player = new PlayerData
             {
-                Level = player.Level,
+                Level = playerComp.Level,
                 Xp = currentXp,
+                MaxHP = lifeComp.MaxHP,
+                MaxES = lifeComp.MaxES,
+                MaxMana = lifeComp.MaxMana,
                 XpData = new XpData
                 {
                     ProgressPercent = progressPct,
