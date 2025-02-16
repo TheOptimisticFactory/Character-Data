@@ -1,14 +1,15 @@
-﻿using CharacterData.NewFolder;
+﻿using CharacterData.Export;
+using CharacterData.Logic;
 using CharacterData.Render;
 using ExileCore;
-using MongoDB.Driver;
+using SQLitePCL;
 
 namespace CharacterData;
 
 public class Main : BaseSettingsPlugin<Settings>
 {
     public static Main Plugin;
-    public static MongoClient MongoClient;
+    public ExportManager ExportManager;
 
     public Main()
     {
@@ -18,18 +19,27 @@ public class Main : BaseSettingsPlugin<Settings>
     public override bool Initialise()
     {
         Plugin = this;
-        MongoClient = new MongoClient(Settings.SnapshotSettings.MongoConnection);
 
-        // Initialize plugin logic module
+        Batteries_V2.Init();
+
+        ExportManager = new ExportManager();
+        ExportManager.Initialize();
+
         PluginLogic.Initialise();
 
-        // Listen for changes to the Mongo connection string
-        Settings.SnapshotSettings.MongoConnection.OnValueChanged += () =>
-        {
-            MongoClient = new MongoClient(Settings.SnapshotSettings.MongoConnection);
-        };
-
         return true;
+    }
+
+    public override void OnPluginDestroyForHotReload()
+    {
+        base.OnPluginDestroyForHotReload();
+        ExportManager?.Dispose();
+    }
+
+    public override void Dispose()
+    {
+        base.Dispose();
+        ExportManager?.Dispose();
     }
 
     public override Job Tick()

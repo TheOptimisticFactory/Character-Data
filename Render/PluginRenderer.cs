@@ -1,4 +1,4 @@
-﻿using CharacterData.NewFolder;
+﻿using CharacterData.Logic;
 using CharacterData.Utils;
 using ExileCore.PoEMemory.Components;
 using SharpDX;
@@ -10,7 +10,6 @@ public static class PluginRenderer
 {
     public static void Render()
     {
-        // Only render if not waiting for a player or a pending area reset.
         if (PluginLogic.WaitingForPlayer || PluginLogic.PendingAreaReset)
             return;
 

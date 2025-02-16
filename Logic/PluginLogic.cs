@@ -1,22 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
-using CharacterData.Export;
 using CharacterData.Structs;
 using CharacterData.Utils;
 using ExileCore;
 using ExileCore.PoEMemory.Components;
 using ExileCore.Shared.Enums;
+using static CharacterData.Main;
 
-namespace CharacterData.NewFolder;
+namespace CharacterData.Logic;
 
 public static class PluginLogic
 {
-    // These fields now hold the logic state previously inside Main.
     private static bool _initialised;
     private static InstanceData _currentInstance;
-    private static readonly List<SnapshotData> _snapshots = new();
+    private static readonly List<SnapshotData> Snapshots = [];
 
-    // Expose some state for rendering purposes.
     public static bool WaitingForPlayer { get; private set; }
 
     public static bool PendingAreaReset { get; private set; }
@@ -32,26 +30,38 @@ public static class PluginLogic
 
     public static void Update()
     {
-        // If waiting for the player or the area just reset, update the session start.
+        if (Plugin?.GameController?.Player == null)
+        {
+            WaitingForPlayer = true;
+            return;
+        }
+
         if (WaitingForPlayer || PendingAreaReset)
         {
-            var player = Main.Plugin.GameController.Player?.GetComponent<Player>();
+            var player = Plugin.GameController.Player.GetComponent<Player>();
             if (player != null)
             {
                 var currentKills = TryGetStat(GameStat.CharacterKillCount);
                 long currentXp = player.XP;
-                _currentInstance = new InstanceData(
-                    Main.Plugin.GameController.Area.CurrentArea,
-                    currentXp, currentKills, DateTime.Now);
 
-                if (WaitingForPlayer)
+                if (Plugin.GameController.Area?.CurrentArea != null)
                 {
-                    WaitingForPlayer = false;
-                    _initialised = true;
-                }
+                    _currentInstance = new InstanceData(
+                        player.PlayerName,
+                        Plugin.GameController.Area.CurrentArea,
+                        currentXp,
+                        currentKills,
+                        DateTime.Now);
 
-                if (PendingAreaReset)
-                    PendingAreaReset = false;
+                    if (WaitingForPlayer)
+                    {
+                        WaitingForPlayer = false;
+                        _initialised = true;
+                    }
+
+                    if (PendingAreaReset)
+                        PendingAreaReset = false;
+                }
             }
         }
         else
@@ -66,11 +76,10 @@ public static class PluginLogic
         {
             if (ShouldLog())
             {
-                // Delegate exporting to the SnapshotExporter helper.
-                SnapshotExporter.ExportSnapshot(CurrentSnapshot);
-                if (_snapshots.Count >= 10)
-                    _snapshots.RemoveAt(0);
-                _snapshots.Add(CurrentSnapshot);
+                Plugin.ExportManager.ExportSnapshot(CurrentSnapshot, _currentInstance.CharacterName);
+                if (Snapshots.Count >= 10)
+                    Snapshots.RemoveAt(0);
+                Snapshots.Add(CurrentSnapshot);
             }
 
             WaitingForPlayer = true;
@@ -79,18 +88,18 @@ public static class PluginLogic
 
     private static int TryGetStat(GameStat stat)
     {
-        return Main.Plugin.GameController.Player.Stats.GetValueOrDefault(stat, 0);
+        return Plugin?.GameController?.Player?.Stats?.GetValueOrDefault(stat, 0) ?? 0;
     }
 
     private static bool ShouldLog()
     {
-        if (!Main.Plugin.Settings.SnapshotSettings.Enabled)
+        if (!Plugin.Settings.InstanceExportSettings.Enabled)
             return false;
 
-        if (Main.Plugin.Settings.SnapshotSettings.LogAllAreaChanges)
+        if (Plugin.Settings.InstanceExportSettings.LogAllAreaChanges)
             return true;
 
-        var player = Main.Plugin.GameController.Player?.GetComponent<Player>();
+        var player = Plugin.GameController.Player?.GetComponent<Player>();
         if (player == null)
             return false;
 
@@ -102,7 +111,7 @@ public static class PluginLogic
 
     private static SnapshotData CreateSnapshot()
     {
-        var player = Main.Plugin.GameController.Player?.GetComponent<Player>();
+        var player = Plugin.GameController.Player?.GetComponent<Player>();
         if (player == null)
             return null;
 
@@ -119,7 +128,7 @@ public static class PluginLogic
         var timeToLevelSecs = CharacterUtils.GetTimeToLevelSeconds(
             xpGained, timeElapsed, player.Level, player.XP);
 
-        var areaDiff = player.Level - Main.Plugin.GameController.Game.IngameState.Data.CurrentAreaLevel;
+        var areaDiff = player.Level - Plugin.GameController.Game.IngameState.Data.CurrentAreaLevel;
         var areaKills = currentKills - _currentInstance.JoinKills;
 
         var xpPerMobAvg = areaKills > 0 ? (double)xpGained / areaKills : (double?)null;
@@ -245,8 +254,8 @@ public static class PluginLogic
         };
     }
 
-    // Record struct moved here from Main.
     public readonly record struct InstanceData(
+        string CharacterName,
         AreaInstance Area,
         long JoinExperience,
         int JoinKills,
