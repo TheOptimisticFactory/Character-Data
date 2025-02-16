@@ -35,10 +35,12 @@ public class ExportSettings
     public SqLiteSettings SqLiteSettings { get; set; } = new();
 }
 
-[Submenu (CollapsedByDefault = true)]
+[Submenu (CollapsedByDefault = false)]
 public class JsonSettings
 {
+    [Menu("Enable and allow CharacterDataFrontend compatibility", "This allows the use of https://detectivesquirrel.github.io/CharacterDataFrontend/\nIf you know how to extract your data from the other exporters\nfeel free to do so.")]
     public ToggleNode Enabled { get; set; } = new(true);
+    [Menu("Combine into Same File", "Enabled: Allows the use of https://detectivesquirrel.github.io/CharacterDataFrontend/ as its all logged into a single file\nDisabled: logged to individual files.")]
     public ToggleNode AppendToFileMode { get; set; } = new(true);
 }
 
