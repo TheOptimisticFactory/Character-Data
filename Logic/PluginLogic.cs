@@ -104,13 +104,16 @@ public static class PluginLogic
         if (!Plugin.Settings.InstanceExportSettings.Enabled)
             return false;
 
+        if (_currentInstance.CharacterName != Plugin.GameController?.Player?.GetComponent<Player>().PlayerName)
+            return false;
+
         if (_currentInstance.Area.IsPeaceful && !Plugin.Settings.InstanceExportSettings.EnablePeacefulAreas)
             return false;
 
         if (Plugin.Settings.InstanceExportSettings.DisableConditionalShouldLogChecks)
             return true;
 
-        var player = Plugin.GameController.Player?.GetComponent<Player>();
+        var player = Plugin.GameController?.Player?.GetComponent<Player>();
         if (player == null)
             return false;
 
