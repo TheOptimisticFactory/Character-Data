@@ -104,7 +104,7 @@ public static class PluginLogic
         if (!Plugin.Settings.InstanceExportSettings.Enabled)
             return false;
 
-        if (_currentInstance.Area.IsPeaceful)
+        if (_currentInstance.Area.IsPeaceful && !Plugin.Settings.InstanceExportSettings.EnablePeacefulAreas)
             return false;
 
         if (Plugin.Settings.InstanceExportSettings.DisableConditionalShouldLogChecks)

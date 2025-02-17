@@ -27,8 +27,10 @@ public class Settings : ISettings
 public class ExportSettings
 {
     public ToggleNode Enabled { get; set; } = new(true);
+    [Menu("Enable logging Peaceful areas.", "This will log IsHideout and IsTown areas as well as anything else under IsPeaceful.")]
+    public ToggleNode EnablePeacefulAreas { get; set; } = new(true);
     [Menu("Ignore Conditional Log Checks", "This will ignore logging regardless if we have increased kills or gained xp\nThis does not override logging Peaceful areas.")]
-    public ToggleNode DisableConditionalShouldLogChecks { get; set; } = new(false);
+    public ToggleNode DisableConditionalShouldLogChecks { get; set; } = new(true);
     public JsonSettings JsonSettings { get; set; } = new();
     public MongoSettings MongoSettings { get; set; } = new();
     public PostgresSettings PostgresSettings { get; set; } = new();

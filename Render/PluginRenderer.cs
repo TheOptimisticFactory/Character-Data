@@ -129,7 +129,7 @@ public static class PluginRenderer
         var xpGained = xpData.XpGained;
         var levelPercent = xpData.LevelPercent;
         var xpPerHour = xpData.XpPerHour;
-        var areaTimeSecs = xpData.AreaTimeSeconds;
+        var areaTimeSecs = snapshot.AreaTimeSeconds;
 
         var timeToLevelDisplay = xpData.TimeToLevelSeconds.HasValue
             ? CharacterUtils.FormatTime(xpData.TimeToLevelSeconds.Value)
