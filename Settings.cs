@@ -82,9 +82,9 @@ public class DefenseSettings
     public ColorNode BlockColor { get; set; } =
         System.Drawing.Color.FromArgb(255, 200, 150, 150).ToSharpDx();
 
-    public RangeNode<int> DefenseX { get; set; } = new(1063, 0, 2000);
+    public RangeNode<int> DefenseX { get; set; } = new(1063, 0, 4000);
 
-    public RangeNode<int> DefenseY { get; set; } = new(1286, 0, 2000);
+    public RangeNode<int> DefenseY { get; set; } = new(1286, 0, 4000);
 }
 
 [Submenu]
@@ -104,9 +104,9 @@ public class ResistanceSettings
     public ColorNode ChaosResistanceColor { get; set; } =
         System.Drawing.Color.FromArgb(255, 255, 91, 179).ToSharpDx();
 
-    public RangeNode<int> ResistanceX { get; set; } = new(1063, 0, 2000);
+    public RangeNode<int> ResistanceX { get; set; } = new(1063, 0, 4000);
 
-    public RangeNode<int> ResistanceY { get; set; } = new(1236, 0, 2000);
+    public RangeNode<int> ResistanceY { get; set; } = new(1236, 0, 4000);
 }
 
 [Submenu]
@@ -117,9 +117,9 @@ public class LevelSettings
     public ColorNode TextColor { get; set; } =
         System.Drawing.Color.White.ToSharpDx();
 
-    public RangeNode<int> LevelPositionX { get; set; } = new(680, 0, 2000);
+    public RangeNode<int> LevelPositionX { get; set; } = new(680, 0, 4000);
 
-    public RangeNode<int> LevelPositionY { get; set; } = new(1236, 0, 2000);
+    public RangeNode<int> LevelPositionY { get; set; } = new(1236, 0, 4000);
 }
 
 [Submenu]
@@ -130,11 +130,11 @@ public class BackgroundSettings
     public ColorNode BackgroundColor { get; set; } =
         System.Drawing.Color.FromArgb(197, 0, 0, 0).ToSharpDx();
 
-    public RangeNode<int> ResolutionLeft { get; internal set; } = new(667, 0, 2000);
+    public RangeNode<int> ResolutionLeft { get; internal set; } = new(667, 0, 4000);
 
-    public RangeNode<int> ResolutionTop { get; internal set; } = new(1230, 0, 2000);
+    public RangeNode<int> ResolutionTop { get; internal set; } = new(1230, 0, 4000);
 
-    public RangeNode<int> ResolutionRight { get; internal set; } = new(1256, 0, 2000);
+    public RangeNode<int> ResolutionRight { get; internal set; } = new(1256, 0, 4000);
 
-    public RangeNode<int> ResolutionBottom { get; internal set; } = new(1349, 0, 2000);
+    public RangeNode<int> ResolutionBottom { get; internal set; } = new(1349, 0, 4000);
 }
