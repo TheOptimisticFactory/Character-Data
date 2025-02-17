@@ -1,4 +1,5 @@
-﻿using CharacterData.Export;
+﻿using System.Threading.Tasks;
+using CharacterData.Export;
 using CharacterData.Logic;
 using CharacterData.Render;
 using ExileCore;
@@ -50,6 +51,7 @@ public class Main : BaseSettingsPlugin<Settings>
 
     public override void AreaChange(AreaInstance area)
     {
+        Task.Delay(75); // Experimenting with trying to reduce data anomalies, need to wait for either hud or client to change/read memory addresses?
         PluginLogic.AreaChange(area);
     }
 
