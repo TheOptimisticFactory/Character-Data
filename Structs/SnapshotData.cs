@@ -3,7 +3,9 @@
 public class SnapshotData
 {
     public long SnapshotTime { get; set; }
-    public AreaData Area { get; set; }
+    public double AreaTimeSeconds { get; set; }
+    public AreaData StartArea { get; set; }
+    public AreaData EndArea { get; set; }
     public PlayerData Player { get; set; }
     public ResistanceData Resistances { get; set; }
     public DefenseData Defenses { get; set; }
@@ -37,7 +39,6 @@ public class XpData
     public double XpPerHour { get; set; }
     public double? XpPerMobAvg { get; set; }
     public double? TimeToLevelSeconds { get; set; }
-    public double AreaTimeSeconds { get; set; }
 }
 
 public class RunsData

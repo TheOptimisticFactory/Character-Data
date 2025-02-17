@@ -76,6 +76,14 @@ public static class PluginLogic
         {
             if (ShouldLog())
             {
+                CurrentSnapshot.EndArea = new AreaData
+                {
+                    Name = area.Name,
+                    Level = area.RealLevel,
+                    Act = area.Act,
+                    Difference = CurrentSnapshot.Player.Level - area.RealLevel
+                };
+
                 Plugin.ExportManager.ExportSnapshot(CurrentSnapshot, _currentInstance.CharacterName);
                 if (Snapshots.Count >= 10)
                     Snapshots.RemoveAt(0);
@@ -141,7 +149,7 @@ public static class PluginLogic
         var timeToLevelSecs = CharacterUtils.GetTimeToLevelSeconds(
             xpGained, timeElapsed, playerComp.Level, playerComp.XP);
 
-        var areaDiff = playerComp.Level - Plugin.GameController.Game.IngameState.Data.CurrentAreaLevel;
+        var areaDiff = playerComp.Level - _currentInstance.Area.RealLevel;
         var areaKills = currentKills - _currentInstance.JoinKills;
 
         var xpPerMobAvg = areaKills > 0 ? (double)xpGained / areaKills : (double?)null;
@@ -184,7 +192,8 @@ public static class PluginLogic
         return new SnapshotData
         {
             SnapshotTime = DateTimeOffset.Now.ToUnixTimeSeconds(),
-            Area = new AreaData
+            AreaTimeSeconds = timeElapsed,
+            StartArea = new AreaData
             {
                 Name = _currentInstance.Area.Name,
                 Level = _currentInstance.Area.RealLevel,
@@ -206,7 +215,6 @@ public static class PluginLogic
                     XpPerHour = xpPerHour,
                     XpPerMobAvg = xpPerMobAvg,
                     TimeToLevelSeconds = timeToLevelSecs,
-                    AreaTimeSeconds = timeElapsed
                 },
                 Runs = new RunsData
                 {
