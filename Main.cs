@@ -3,6 +3,7 @@ using CharacterData.Export;
 using CharacterData.Logic;
 using CharacterData.Render;
 using ExileCore;
+using SharpDX;
 using SQLitePCL;
 
 namespace CharacterData;
@@ -58,5 +59,11 @@ public class Main : BaseSettingsPlugin<Settings>
     public override void Render()
     {
         PluginRenderer.Render();
+    }
+
+    public void DebugLog(string text, int time = 5)
+    {
+        if (Settings.DebugLog)
+            LogMessage($"[CharacterData-Debug] {text}", time, Color.AliceBlue);
     }
 }

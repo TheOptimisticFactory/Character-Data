@@ -74,7 +74,9 @@ public static class PluginLogic
     {
         if (_initialised)
         {
-            if (ShouldLog())
+            var shouldLog = ShouldLog();
+            Plugin.DebugLog($"ShouldLog = {shouldLog}");
+            if (shouldLog)
             {
                 CurrentSnapshot.EndArea = new AreaData
                 {
@@ -102,20 +104,35 @@ public static class PluginLogic
     private static bool ShouldLog()
     {
         if (!Plugin.Settings.InstanceExportSettings.Enabled)
+        {
+            Plugin.DebugLog("Exporting is not enabled.");
             return false;
+        }
 
         if (_currentInstance.CharacterName != Plugin.GameController?.Player?.GetComponent<Player>().PlayerName)
+        {
+            Plugin.DebugLog("Player names do not match.");
             return false;
+        }
 
         if (_currentInstance.Area.IsPeaceful && !Plugin.Settings.InstanceExportSettings.EnablePeacefulAreas)
+        {
+            Plugin.DebugLog("Area is peaceful and Export on Peaceful is disabled.");
             return false;
+        }
 
         if (Plugin.Settings.InstanceExportSettings.DisableConditionalShouldLogChecks)
+        {
+            Plugin.DebugLog("Disable conditionals is enabled.");
             return true;
+        }
 
         var player = Plugin.GameController?.Player?.GetComponent<Player>();
         if (player == null)
+        {
+            Plugin.DebugLog("Could not get player component.");
             return false;
+        }
 
         var currentKills = TryGetStat(GameStat.CharacterKillCount);
         var xpGained = player.XP - _currentInstance.JoinExperience;

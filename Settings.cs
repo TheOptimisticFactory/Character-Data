@@ -15,6 +15,7 @@ public static class ColorExtensions
 
 public class Settings : ISettings
 {
+    public ToggleNode DebugLog { get; set; } = new ToggleNode(false);
     public ExportSettings InstanceExportSettings { get; set; } = new();
     public LevelSettings LevelSettings { get; set; } = new();
     public ResistanceSettings ResistanceSettings { get; set; } = new();
