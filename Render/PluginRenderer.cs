@@ -1,5 +1,7 @@
-﻿using CharacterData.Logic;
+﻿using System.Linq;
+using CharacterData.Logic;
 using CharacterData.Utils;
+using ExileCore;
 using ExileCore.PoEMemory.Components;
 using SharpDX;
 using Vector2 = System.Numerics.Vector2;
@@ -11,6 +13,22 @@ public static class PluginRenderer
     public static void Render()
     {
         if (PluginLogic.WaitingForPlayer || PluginLogic.PendingAreaReset)
+            return;
+
+        var ingameUi = Main.Plugin.GameController.Game.IngameState.IngameUi;
+        if (!Main.Plugin.Settings.RenderSettings.IgnoreFullscreenPanels && ingameUi.FullscreenPanels.Any(x => x.IsVisible))
+            return;
+
+        if (!Main.Plugin.Settings.RenderSettings.IgnoreLargePanels && ingameUi.LargePanels.Any(x => x.IsVisible))
+            return;
+
+        if (!Main.Plugin.Settings.RenderSettings.IgnoreChatPanel && ingameUi.ChatTitlePanel.IsVisible)
+            return;
+
+        if (!Main.Plugin.Settings.RenderSettings.IgnoreLeftPanel && ingameUi.OpenLeftPanel.IsVisible)
+            return;
+
+        if (!Main.Plugin.Settings.RenderSettings.IgnoreRightPanel && ingameUi.OpenRightPanel.IsVisible)
             return;
 
         DrawBackground();

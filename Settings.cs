@@ -15,6 +15,7 @@ public static class ColorExtensions
 
 public class Settings : ISettings
 {
+    public RenderSettings RenderSettings { get; set; } = new();
     public ToggleNode DebugLog { get; set; } = new ToggleNode(false);
     public ExportSettings InstanceExportSettings { get; set; } = new();
     public LevelSettings LevelSettings { get; set; } = new();
@@ -22,6 +23,16 @@ public class Settings : ISettings
     public DefenseSettings DefenseSettings { get; set; } = new();
     public BackgroundSettings BackgroundSettings { get; set; } = new();
     public ToggleNode Enable { get; set; } = new(false);
+}
+
+[Submenu(CollapsedByDefault = false)]
+public class RenderSettings
+{
+    public ToggleNode IgnoreFullscreenPanels { get; set; } = new ToggleNode(false);
+    public ToggleNode IgnoreLargePanels { get; set; } = new ToggleNode(true);
+    public ToggleNode IgnoreChatPanel { get; set; } = new ToggleNode(false);
+    public ToggleNode IgnoreLeftPanel { get; set; } = new ToggleNode(true);
+    public ToggleNode IgnoreRightPanel { get; set; } = new ToggleNode(true);
 }
 
 [Submenu]
