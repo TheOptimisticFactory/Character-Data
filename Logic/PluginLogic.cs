@@ -16,9 +16,7 @@ public static class PluginLogic
     private static readonly List<SnapshotData> Snapshots = [];
 
     public static bool WaitingForPlayer { get; private set; }
-
     public static bool PendingAreaReset { get; private set; }
-
     public static SnapshotData CurrentSnapshot { get; private set; }
 
     public static void Initialise()
@@ -26,6 +24,20 @@ public static class PluginLogic
         _initialised = false;
         WaitingForPlayer = true;
         PendingAreaReset = false;
+
+        if (Plugin?.GameController is { Player: not null, Area.CurrentArea: not null })
+        {
+            var player = Plugin.GameController.Player.GetComponent<Player>();
+            if (player != null)
+            {
+                var currentKills = TryGetStat(GameStat.CharacterKillCount);
+                long currentXp = player.XP;
+                var currentGold = Plugin.GameController.IngameState.ServerData.Gold;
+
+                _currentInstance = new InstanceData(
+                    player.PlayerName, Plugin.GameController.Area.CurrentArea, currentXp, currentKills, currentGold, DateTime.Now);
+            }
+        }
     }
 
     public static void Update()
@@ -37,60 +49,68 @@ public static class PluginLogic
         }
 
         if (WaitingForPlayer || PendingAreaReset)
-        {
-            var player = Plugin.GameController.Player.GetComponent<Player>();
-            if (player != null)
-            {
-                var currentKills = TryGetStat(GameStat.CharacterKillCount);
-                long currentXp = player.XP;
-                var currentGold = Plugin.GameController.IngameState.ServerData.Gold;
-
-                if (Plugin.GameController.Area?.CurrentArea != null)
-                {
-                    _currentInstance = new InstanceData(
-                        player.PlayerName, Plugin.GameController.Area.CurrentArea, currentXp, currentKills, currentGold, DateTime.Now);
-
-                    if (WaitingForPlayer)
-                    {
-                        WaitingForPlayer = false;
-                        _initialised = true;
-                    }
-
-                    if (PendingAreaReset)
-                        PendingAreaReset = false;
-                }
-            }
-        }
+            CreateNewInstance();
         else
-        {
             CurrentSnapshot = CreateSnapshot();
-        }
     }
 
     public static void AreaChange(AreaInstance area)
     {
-        if (_initialised)
+        if (!_initialised) return;
+
+        if (ShouldLog())
+            ExportCurrentSnapshot(area);
+
+        ResetForNewArea();
+    }
+
+    private static void CreateNewInstance()
+    {
+        var player = Plugin.GameController.Player.GetComponent<Player>();
+        if (player == null) return;
+
+        var currentArea = Plugin.GameController.Area?.CurrentArea;
+        if (currentArea == null) return;
+
+        var currentKills = TryGetStat(GameStat.CharacterKillCount);
+        long currentXp = player.XP;
+        var currentGold = Plugin.GameController.IngameState.ServerData.Gold;
+
+        _currentInstance = new InstanceData(player.PlayerName, currentArea, currentXp, currentKills, currentGold, DateTime.Now);
+
+        if (WaitingForPlayer)
         {
-            var shouldLog = ShouldLog();
-            Plugin.DebugLog($"ShouldLog = {shouldLog}");
-            if (shouldLog)
-            {
-                CurrentSnapshot.EndArea = new AreaData
-                {
-                    Name = area.Name,
-                    Level = area.RealLevel,
-                    Act = area.Act,
-                    Difference = CurrentSnapshot.Player.Level - area.RealLevel
-                };
-
-                Plugin.ExportManager.ExportSnapshot(CurrentSnapshot, _currentInstance.CharacterName);
-                if (Snapshots.Count >= 10)
-                    Snapshots.RemoveAt(0);
-                Snapshots.Add(CurrentSnapshot);
-            }
-
-            WaitingForPlayer = true;
+            WaitingForPlayer = false;
+            _initialised = true;
         }
+
+        if (PendingAreaReset)
+            PendingAreaReset = false;
+    }
+
+    private static void ExportCurrentSnapshot(AreaInstance newArea)
+    {
+        if (CurrentSnapshot?.Player == null) return;
+
+        CurrentSnapshot.EndArea = new AreaData
+        {
+            Name = newArea.Name,
+            Level = newArea.RealLevel,
+            Act = newArea.Act,
+            Difference = CurrentSnapshot.Player.Level - newArea.RealLevel
+        };
+
+        Plugin.ExportManager.ExportSnapshot(CurrentSnapshot, _currentInstance.CharacterName);
+
+        if (Snapshots.Count >= 10)
+            Snapshots.RemoveAt(0);
+        Snapshots.Add(CurrentSnapshot);
+    }
+
+    private static void ResetForNewArea()
+    {
+        WaitingForPlayer = true;
+        PendingAreaReset = true;
     }
 
     private static int TryGetStat(GameStat stat)
@@ -101,121 +121,61 @@ public static class PluginLogic
     private static bool ShouldLog()
     {
         if (!Plugin.Settings.InstanceExportSettings.Enabled)
-        {
-            Plugin.DebugLog("Exporting is not enabled.");
             return false;
-        }
 
-        if (_currentInstance.CharacterName != Plugin.GameController?.Player?.GetComponent<Player>().PlayerName)
-        {
-            Plugin.DebugLog("Player names do not match.");
+        var currentPlayer = Plugin.GameController?.Player?.GetComponent<Player>();
+        if (currentPlayer == null || _currentInstance.CharacterName != currentPlayer.PlayerName)
             return false;
-        }
-
-        if (_currentInstance.Area.IsPeaceful && !Plugin.Settings.InstanceExportSettings.EnablePeacefulAreas)
-        {
-            Plugin.DebugLog("Area is peaceful and Export on Peaceful is disabled.");
-            return false;
-        }
 
         if (Plugin.Settings.InstanceExportSettings.DisableConditionalShouldLogChecks)
-        {
-            Plugin.DebugLog("Disable conditionals is enabled.");
             return true;
-        }
-
-        var player = Plugin.GameController?.Player?.GetComponent<Player>();
-        if (player == null)
-        {
-            Plugin.DebugLog("Could not get player component.");
-            return false;
-        }
 
         var currentKills = TryGetStat(GameStat.CharacterKillCount);
-        var xpGained = player.XP - _currentInstance.JoinExperience;
+        var xpGained = currentPlayer.XP - _currentInstance.JoinExperience;
         var killsGained = currentKills - _currentInstance.JoinKills;
-        //var currentGold = Plugin.GameController.IngameState.ServerData.Gold;
-        //var goldGained = currentGold - _currentInstance.JoinGold;
-        return xpGained > 0 || killsGained > 0; // || goldGained > 0;
+        var hasProgress = xpGained > 0 || killsGained > 0;
+
+        if (!hasProgress && _currentInstance.Area.IsPeaceful && !Plugin.Settings.InstanceExportSettings.EnablePeacefulAreas)
+            return false;
+
+        return hasProgress;
     }
 
     private static SnapshotData CreateSnapshot()
     {
         var playerComp = Plugin.GameController.Player?.GetComponent<Player>();
-        if (playerComp == null)
-        {
-            Plugin.LogError("[CreateSnapshot] playerComp == null", 10);
-            return null;
-        }
-
         var lifeComp = Plugin.GameController.Player?.GetComponent<Life>();
-        if (lifeComp == null)
-        {
-            Plugin.LogError("[CreateSnapshot] lifeComp == null", 10);
+
+        if (playerComp == null || lifeComp == null)
             return null;
-        }
 
         var currentKills = TryGetStat(GameStat.CharacterKillCount);
         var currentXp = playerComp.XP;
-        var progressPct = CharacterUtils.CalculateProgress(playerComp.Level, playerComp.XP);
         var xpGained = currentXp - _currentInstance.JoinExperience;
-        var levelPercent = CharacterUtils.GetLevelGainPercent(playerComp.Level, xpGained);
         var timeElapsed = (DateTime.Now - _currentInstance.JoinTime).TotalSeconds;
-        var xpPerHour = timeElapsed > 0 ? xpGained / timeElapsed * 3600 : 0.0;
-
         var currentGold = Plugin.GameController.IngameState.ServerData.Gold;
         var goldGained = currentGold - _currentInstance.JoinGold;
+        var areaKills = currentKills - _currentInstance.JoinKills;
 
+        var progressPct = CharacterUtils.CalculateProgress(playerComp.Level, playerComp.XP);
+        var levelPercent = CharacterUtils.GetLevelGainPercent(playerComp.Level, xpGained);
+        var xpPerHour = timeElapsed > 0 ? xpGained / timeElapsed * 3600 : 0.0;
+        var xpPerMobAvg = areaKills > 0 ? (double)xpGained / areaKills : (double?)null;
         var runsToNext = CharacterUtils.GetRunsToNextLevel(playerComp.Level, playerComp.XP, xpGained);
         var totalRuns = CharacterUtils.GetTotalRuns(playerComp.Level, xpGained);
         var timeToLevelSecs = CharacterUtils.GetTimeToLevelSeconds(xpGained, timeElapsed, playerComp.Level, playerComp.XP);
-
-        var areaDiff = playerComp.Level - _currentInstance.Area.RealLevel;
-        var areaKills = currentKills - _currentInstance.JoinKills;
-
-        var xpPerMobAvg = areaKills > 0 ? (double)xpGained / areaKills : (double?)null;
-
-        var physReduction = TryGetStat(GameStat.DisplayEstimatedPhysicalDamageReducitonPct);
-        var armor = TryGetStat(GameStat.PhysicalDamageReductionRating);
-        var evasion = TryGetStat(GameStat.EvasionRating);
-        var evadeChance = TryGetStat(GameStat.ChanceToEvadePct);
-        var blockChance = TryGetStat(GameStat.AttackBlockPct);
-
-        var fireRes = TryGetStat(GameStat.FireDamageResistancePct);
-        var fireResTotal = TryGetStat(GameStat.UncappedFireDamageResistancePct);
-        var maxFireRes = TryGetStat(GameStat.MaximumFireDamageResistancePct) != 0 ? TryGetStat(GameStat.MaximumFireDamageResistancePct) : 75;
-        var fireDiff = CharacterUtils.ResistanceDifference(fireRes, fireResTotal, maxFireRes);
-
-        var coldRes = TryGetStat(GameStat.ColdDamageResistancePct);
-        var coldResTotal = TryGetStat(GameStat.UncappedColdDamageResistancePct);
-        var maxColdRes = TryGetStat(GameStat.MaximumColdDamageResistancePct) != 0 ? TryGetStat(GameStat.MaximumColdDamageResistancePct) : 75;
-        var coldDiff = CharacterUtils.ResistanceDifference(coldRes, coldResTotal, maxColdRes);
-
-        var lightningRes = TryGetStat(GameStat.LightningDamageResistancePct);
-        var lightningResTotal = TryGetStat(GameStat.UncappedLightningDamageResistancePct);
-        var maxLightningRes = TryGetStat(GameStat.MaximumLightningDamageResistancePct) != 0 ? TryGetStat(GameStat.MaximumLightningDamageResistancePct) : 75;
-        var lightningDiff = CharacterUtils.ResistanceDifference(lightningRes, lightningResTotal, maxLightningRes);
-
-        var chaosRes = TryGetStat(GameStat.ChaosDamageResistancePct);
-        var chaosResTotal = TryGetStat(GameStat.UncappedChaosDamageResistancePct);
-        var maxChaosRes = TryGetStat(GameStat.MaximumChaosDamageResistancePct) != 0 ? TryGetStat(GameStat.MaximumChaosDamageResistancePct) : 75;
-        var chaosDiff = CharacterUtils.ResistanceDifference(chaosRes, chaosResTotal, maxChaosRes);
 
         return new SnapshotData
         {
             SnapshotTime = DateTimeOffset.Now.ToUnixTimeSeconds(),
             AreaTimeSeconds = timeElapsed,
-            Gold = new Gold
-            {
-                Start = _currentInstance.JoinGold,
-                Gain = goldGained
-            },
+            Gold = new Gold { Start = _currentInstance.JoinGold, Gain = goldGained },
             StartArea = new AreaData
             {
                 Name = _currentInstance.Area.Name,
                 Level = _currentInstance.Area.RealLevel,
                 Act = _currentInstance.Area.Act,
-                Difference = areaDiff
+                Difference = playerComp.Level - _currentInstance.Area.RealLevel
             },
             Player = new PlayerData
             {
@@ -233,64 +193,54 @@ public static class PluginLogic
                     XpPerMobAvg = xpPerMobAvg,
                     TimeToLevelSeconds = timeToLevelSecs
                 },
-                Runs = new RunsData
-                {
-                    RunsToNext = runsToNext,
-                    TotalRuns = totalRuns
-                },
-                Kills = new KillsData
-                {
-                    Total = currentKills,
-                    Area = areaKills
-                }
+                Runs = new RunsData { RunsToNext = runsToNext, TotalRuns = totalRuns },
+                Kills = new KillsData { Total = currentKills, Area = areaKills }
             },
-            Resistances = new ResistanceData
+            Resistances = CreateResistanceData(),
+            Defenses = CreateDefenseData()
+        };
+    }
+
+    private static ResistanceData CreateResistanceData()
+    {
+        return new ResistanceData
+        {
+            Fire = CreateResistanceDetail(GameStat.FireDamageResistancePct, GameStat.UncappedFireDamageResistancePct, GameStat.MaximumFireDamageResistancePct),
+            Cold = CreateResistanceDetail(GameStat.ColdDamageResistancePct, GameStat.UncappedColdDamageResistancePct, GameStat.MaximumColdDamageResistancePct),
+            Lightning = CreateResistanceDetail(
+                GameStat.LightningDamageResistancePct, GameStat.UncappedLightningDamageResistancePct, GameStat.MaximumLightningDamageResistancePct),
+            Chaos = CreateResistanceDetail(
+                GameStat.ChaosDamageResistancePct, GameStat.UncappedChaosDamageResistancePct, GameStat.MaximumChaosDamageResistancePct)
+        };
+    }
+
+    private static ResistanceDetail CreateResistanceDetail(GameStat cappedStat, GameStat uncappedStat, GameStat maxStat)
+    {
+        var capped = TryGetStat(cappedStat);
+        var uncapped = TryGetStat(uncappedStat);
+        var max = TryGetStat(maxStat) != 0 ? TryGetStat(maxStat) : 75;
+        var diff = CharacterUtils.ResistanceDifference(capped, uncapped, max);
+
+        return new ResistanceDetail { Capped = capped, Uncapped = uncapped, Max = max, Diff = diff };
+    }
+
+    private static DefenseData CreateDefenseData()
+    {
+        return new DefenseData
+        {
+            Armor = new ArmorData
             {
-                Fire = new ResistanceDetail
-                {
-                    Capped = fireRes,
-                    Uncapped = fireResTotal,
-                    Max = maxFireRes,
-                    Diff = fireDiff
-                },
-                Cold = new ResistanceDetail
-                {
-                    Capped = coldRes,
-                    Uncapped = coldResTotal,
-                    Max = maxColdRes,
-                    Diff = coldDiff
-                },
-                Lightning = new ResistanceDetail
-                {
-                    Capped = lightningRes,
-                    Uncapped = lightningResTotal,
-                    Max = maxLightningRes,
-                    Diff = lightningDiff
-                },
-                Chaos = new ResistanceDetail
-                {
-                    Capped = chaosRes,
-                    Uncapped = chaosResTotal,
-                    Max = maxChaosRes,
-                    Diff = chaosDiff
-                }
+                Rating = TryGetStat(GameStat.PhysicalDamageReductionRating),
+                DisplayReduction = TryGetStat(GameStat.DisplayEstimatedPhysicalDamageReducitonPct)
             },
-            Defenses = new DefenseData
+            Evasion = new EvasionData
             {
-                Armor = new ArmorData
-                {
-                    Rating = armor,
-                    DisplayReduction = physReduction
-                },
-                Evasion = new EvasionData
-                {
-                    Rating = evasion,
-                    ChanceToEvade = evadeChance
-                },
-                Block = new BlockData
-                {
-                    AttackBlockPct = blockChance
-                }
+                Rating = TryGetStat(GameStat.EvasionRating),
+                ChanceToEvade = TryGetStat(GameStat.ChanceToEvadePct)
+            },
+            Block = new BlockData
+            {
+                AttackBlockPct = TryGetStat(GameStat.AttackBlockPct)
             }
         };
     }
