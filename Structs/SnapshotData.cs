@@ -4,11 +4,18 @@ public class SnapshotData
 {
     public long SnapshotTime { get; set; }
     public double AreaTimeSeconds { get; set; }
+    public Gold Gold { get; set; }
     public AreaData StartArea { get; set; }
     public AreaData EndArea { get; set; }
     public PlayerData Player { get; set; }
     public ResistanceData Resistances { get; set; }
     public DefenseData Defenses { get; set; }
+}
+
+public class Gold
+{
+    public int Start { get; set; }
+    public int Gain { get; set; }
 }
 
 public class AreaData

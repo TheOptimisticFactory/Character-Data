@@ -20,6 +20,7 @@ public class Settings : ISettings
     public ExportSettings InstanceExportSettings { get; set; } = new();
     public LevelSettings LevelSettings { get; set; } = new();
     public ResistanceSettings ResistanceSettings { get; set; } = new();
+    public GoldSettings GoldSettings { get; set; } = new();
     public DefenseSettings DefenseSettings { get; set; } = new();
     public BackgroundSettings BackgroundSettings { get; set; } = new();
     public ToggleNode Enable { get; set; } = new(false);
@@ -96,6 +97,19 @@ public class DefenseSettings
     public RangeNode<int> DefenseX { get; set; } = new(1063, 0, 4000);
 
     public RangeNode<int> DefenseY { get; set; } = new(1286, 0, 4000);
+}
+
+[Submenu]
+public class GoldSettings
+{
+    public ToggleNode Enabled { get; set; } = new(true);
+
+    public ColorNode GoldColor { get; set; } =
+        System.Drawing.Color.FromArgb(255, 203, 175, 90).ToSharpDx();
+
+    public RangeNode<int> GoldX { get; set; } = new(1063, 0, 4000);
+
+    public RangeNode<int> GoldY { get; set; } = new(1286, 0, 4000);
 }
 
 [Submenu]

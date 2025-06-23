@@ -43,15 +43,12 @@ public static class PluginLogic
             {
                 var currentKills = TryGetStat(GameStat.CharacterKillCount);
                 long currentXp = player.XP;
+                var currentGold = Plugin.GameController.IngameState.ServerData.Gold;
 
                 if (Plugin.GameController.Area?.CurrentArea != null)
                 {
                     _currentInstance = new InstanceData(
-                        player.PlayerName,
-                        Plugin.GameController.Area.CurrentArea,
-                        currentXp,
-                        currentKills,
-                        DateTime.Now);
+                        player.PlayerName, Plugin.GameController.Area.CurrentArea, currentXp, currentKills, currentGold, DateTime.Now);
 
                     if (WaitingForPlayer)
                     {
@@ -137,7 +134,9 @@ public static class PluginLogic
         var currentKills = TryGetStat(GameStat.CharacterKillCount);
         var xpGained = player.XP - _currentInstance.JoinExperience;
         var killsGained = currentKills - _currentInstance.JoinKills;
-        return xpGained > 0 || killsGained > 0;
+        //var currentGold = Plugin.GameController.IngameState.ServerData.Gold;
+        //var goldGained = currentGold - _currentInstance.JoinGold;
+        return xpGained > 0 || killsGained > 0; // || goldGained > 0;
     }
 
     private static SnapshotData CreateSnapshot()
@@ -157,17 +156,19 @@ public static class PluginLogic
         }
 
         var currentKills = TryGetStat(GameStat.CharacterKillCount);
-        long currentXp = playerComp.XP;
+        var currentXp = playerComp.XP;
         var progressPct = CharacterUtils.CalculateProgress(playerComp.Level, playerComp.XP);
         var xpGained = currentXp - _currentInstance.JoinExperience;
         var levelPercent = CharacterUtils.GetLevelGainPercent(playerComp.Level, xpGained);
         var timeElapsed = (DateTime.Now - _currentInstance.JoinTime).TotalSeconds;
         var xpPerHour = timeElapsed > 0 ? xpGained / timeElapsed * 3600 : 0.0;
 
+        var currentGold = Plugin.GameController.IngameState.ServerData.Gold;
+        var goldGained = currentGold - _currentInstance.JoinGold;
+
         var runsToNext = CharacterUtils.GetRunsToNextLevel(playerComp.Level, playerComp.XP, xpGained);
         var totalRuns = CharacterUtils.GetTotalRuns(playerComp.Level, xpGained);
-        var timeToLevelSecs = CharacterUtils.GetTimeToLevelSeconds(
-            xpGained, timeElapsed, playerComp.Level, playerComp.XP);
+        var timeToLevelSecs = CharacterUtils.GetTimeToLevelSeconds(xpGained, timeElapsed, playerComp.Level, playerComp.XP);
 
         var areaDiff = playerComp.Level - _currentInstance.Area.RealLevel;
         var areaKills = currentKills - _currentInstance.JoinKills;
@@ -182,37 +183,33 @@ public static class PluginLogic
 
         var fireRes = TryGetStat(GameStat.FireDamageResistancePct);
         var fireResTotal = TryGetStat(GameStat.UncappedFireDamageResistancePct);
-        var maxFireRes = TryGetStat(GameStat.MaximumFireDamageResistancePct) != 0
-            ? TryGetStat(GameStat.MaximumFireDamageResistancePct)
-            : 75;
+        var maxFireRes = TryGetStat(GameStat.MaximumFireDamageResistancePct) != 0 ? TryGetStat(GameStat.MaximumFireDamageResistancePct) : 75;
         var fireDiff = CharacterUtils.ResistanceDifference(fireRes, fireResTotal, maxFireRes);
 
         var coldRes = TryGetStat(GameStat.ColdDamageResistancePct);
         var coldResTotal = TryGetStat(GameStat.UncappedColdDamageResistancePct);
-        var maxColdRes = TryGetStat(GameStat.MaximumColdDamageResistancePct) != 0
-            ? TryGetStat(GameStat.MaximumColdDamageResistancePct)
-            : 75;
+        var maxColdRes = TryGetStat(GameStat.MaximumColdDamageResistancePct) != 0 ? TryGetStat(GameStat.MaximumColdDamageResistancePct) : 75;
         var coldDiff = CharacterUtils.ResistanceDifference(coldRes, coldResTotal, maxColdRes);
 
         var lightningRes = TryGetStat(GameStat.LightningDamageResistancePct);
         var lightningResTotal = TryGetStat(GameStat.UncappedLightningDamageResistancePct);
-        var maxLightningRes = TryGetStat(GameStat.MaximumLightningDamageResistancePct) != 0
-            ? TryGetStat(GameStat.MaximumLightningDamageResistancePct)
-            : 75;
-        var lightningDiff = CharacterUtils.ResistanceDifference(
-            lightningRes, lightningResTotal, maxLightningRes);
+        var maxLightningRes = TryGetStat(GameStat.MaximumLightningDamageResistancePct) != 0 ? TryGetStat(GameStat.MaximumLightningDamageResistancePct) : 75;
+        var lightningDiff = CharacterUtils.ResistanceDifference(lightningRes, lightningResTotal, maxLightningRes);
 
         var chaosRes = TryGetStat(GameStat.ChaosDamageResistancePct);
         var chaosResTotal = TryGetStat(GameStat.UncappedChaosDamageResistancePct);
-        var maxChaosRes = TryGetStat(GameStat.MaximumChaosDamageResistancePct) != 0
-            ? TryGetStat(GameStat.MaximumChaosDamageResistancePct)
-            : 75;
+        var maxChaosRes = TryGetStat(GameStat.MaximumChaosDamageResistancePct) != 0 ? TryGetStat(GameStat.MaximumChaosDamageResistancePct) : 75;
         var chaosDiff = CharacterUtils.ResistanceDifference(chaosRes, chaosResTotal, maxChaosRes);
 
         return new SnapshotData
         {
             SnapshotTime = DateTimeOffset.Now.ToUnixTimeSeconds(),
             AreaTimeSeconds = timeElapsed,
+            Gold = new Gold
+            {
+                Start = _currentInstance.JoinGold,
+                Gain = goldGained
+            },
             StartArea = new AreaData
             {
                 Name = _currentInstance.Area.Name,
@@ -234,7 +231,7 @@ public static class PluginLogic
                     LevelPercent = levelPercent,
                     XpPerHour = xpPerHour,
                     XpPerMobAvg = xpPerMobAvg,
-                    TimeToLevelSeconds = timeToLevelSecs,
+                    TimeToLevelSeconds = timeToLevelSecs
                 },
                 Runs = new RunsData
                 {
@@ -298,10 +295,5 @@ public static class PluginLogic
         };
     }
 
-    public readonly record struct InstanceData(
-        string CharacterName,
-        AreaInstance Area,
-        long JoinExperience,
-        int JoinKills,
-        DateTime JoinTime);
+    public readonly record struct InstanceData(string CharacterName, AreaInstance Area, long JoinExperience, int JoinKills, int JoinGold, DateTime JoinTime);
 }

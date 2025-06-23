@@ -1,8 +1,9 @@
 ﻿using System.Linq;
 using CharacterData.Logic;
+using CharacterData.Structs;
 using CharacterData.Utils;
-using ExileCore;
 using ExileCore.PoEMemory.Components;
+using ExileCore.PoEMemory.MemoryObjects;
 using SharpDX;
 using Vector2 = System.Numerics.Vector2;
 
@@ -35,6 +36,7 @@ public static class PluginRenderer
         DrawResistances();
         DrawDefenses();
         DrawExperienceData();
+        DrawGold();
     }
 
     private static void DrawBackground()
@@ -50,14 +52,12 @@ public static class PluginRenderer
             Bottom = Main.Plugin.Settings.BackgroundSettings.ResolutionBottom
         };
 
-        Main.Plugin.Graphics.DrawBox(
-            rect, Main.Plugin.Settings.BackgroundSettings.BackgroundColor);
+        Main.Plugin.Graphics.DrawBox(rect, Main.Plugin.Settings.BackgroundSettings.BackgroundColor);
     }
 
     private static void DrawResistances()
     {
-        if (!Main.Plugin.Settings.ResistanceSettings.Enabled ||
-            PluginLogic.CurrentSnapshot == null)
+        if (!Main.Plugin.Settings.ResistanceSettings.Enabled || PluginLogic.CurrentSnapshot == null)
             return;
 
         var snapshot = PluginLogic.CurrentSnapshot;
@@ -91,28 +91,21 @@ public static class PluginRenderer
         };
 
         TextRenderHelper.DrawMultilineText(
-            Main.Plugin.Graphics,
-            lines,
-            new Vector2(
-                Main.Plugin.Settings.ResistanceSettings.ResistanceX,
-                Main.Plugin.Settings.ResistanceSettings.ResistanceY),
+            Main.Plugin.Graphics, lines, new Vector2(Main.Plugin.Settings.ResistanceSettings.ResistanceX, Main.Plugin.Settings.ResistanceSettings.ResistanceY),
             colors);
     }
 
     private static void DrawDefenses()
     {
-        if (!Main.Plugin.Settings.DefenseSettings.Enabled ||
-            PluginLogic.CurrentSnapshot == null)
+        if (!Main.Plugin.Settings.DefenseSettings.Enabled || PluginLogic.CurrentSnapshot == null)
             return;
 
         var snapshot = PluginLogic.CurrentSnapshot;
 
         var lines = new[]
         {
-            $"{"Armor:",-8}{snapshot.Defenses.Armor.DisplayReduction + "%",-5}" +
-            $"({snapshot.Defenses.Armor.Rating:#,##0})",
-            $"{"Evade:",-8}{snapshot.Defenses.Evasion.ChanceToEvade + "%",-5}" +
-            $"({snapshot.Defenses.Evasion.Rating:#,##0})",
+            $"{"Armor:",-8}{snapshot.Defenses.Armor.DisplayReduction + "%",-5}" + $"({snapshot.Defenses.Armor.Rating:#,##0})",
+            $"{"Evade:",-8}{snapshot.Defenses.Evasion.ChanceToEvade + "%",-5}" + $"({snapshot.Defenses.Evasion.Rating:#,##0})",
             $"{"Block:",-8}{snapshot.Defenses.Block.AttackBlockPct + "%"}"
         };
 
@@ -124,18 +117,34 @@ public static class PluginRenderer
         };
 
         TextRenderHelper.DrawMultilineText(
-            Main.Plugin.Graphics,
-            lines,
-            new Vector2(
-                Main.Plugin.Settings.DefenseSettings.DefenseX,
-                Main.Plugin.Settings.DefenseSettings.DefenseY),
-            colors);
+            Main.Plugin.Graphics, lines, new Vector2(Main.Plugin.Settings.DefenseSettings.DefenseX, Main.Plugin.Settings.DefenseSettings.DefenseY), colors);
+    }
+
+
+    private static void DrawGold()
+    {
+        if (!Main.Plugin.Settings.GoldSettings.Enabled || PluginLogic.CurrentSnapshot == null)
+            return;
+
+        var snapshot = PluginLogic.CurrentSnapshot;
+
+        var lines = new[]
+        {
+            $"Gold: {snapshot.Gold.Start:#,##0} (+{snapshot.Gold.Gain:#,##0})"
+        };
+
+        var colors = new[]
+        {
+            Main.Plugin.Settings.GoldSettings.GoldColor.Value
+        };
+
+        TextRenderHelper.DrawMultilineText(
+            Main.Plugin.Graphics, lines, new Vector2(Main.Plugin.Settings.GoldSettings.GoldX, Main.Plugin.Settings.GoldSettings.GoldY), colors);
     }
 
     private static void DrawExperienceData()
     {
-        if (!Main.Plugin.Settings.LevelSettings.Enabled ||
-            PluginLogic.CurrentSnapshot == null)
+        if (!Main.Plugin.Settings.LevelSettings.Enabled || PluginLogic.CurrentSnapshot == null)
             return;
 
         var snapshot = PluginLogic.CurrentSnapshot;
@@ -149,16 +158,10 @@ public static class PluginRenderer
         var xpPerHour = xpData.XpPerHour;
         var areaTimeSecs = snapshot.AreaTimeSeconds;
 
-        var timeToLevelDisplay = xpData.TimeToLevelSeconds.HasValue
-            ? CharacterUtils.FormatTime(xpData.TimeToLevelSeconds.Value)
-            : "∞";
+        var timeToLevelDisplay = xpData.TimeToLevelSeconds.HasValue ? CharacterUtils.FormatTime(xpData.TimeToLevelSeconds.Value) : "∞";
 
-        var runsToNextDisplay = runs.RunsToNext.HasValue
-            ? runs.RunsToNext.Value.ToString("N0")
-            : "∞";
-        var totalRunsDisplay = runs.TotalRuns.HasValue
-            ? runs.TotalRuns.Value.ToString("N0")
-            : "∞";
+        var runsToNextDisplay = runs.RunsToNext.HasValue ? runs.RunsToNext.Value.ToString("N0") : "∞";
+        var totalRunsDisplay = runs.TotalRuns.HasValue ? runs.TotalRuns.Value.ToString("N0") : "∞";
 
         var player = Main.Plugin.GameController.Player?.GetComponent<Player>();
         if (player == null)
@@ -181,11 +184,7 @@ public static class PluginRenderer
         };
 
         TextRenderHelper.DrawMultilineText(
-            Main.Plugin.Graphics,
-            lines,
-            new Vector2(
-                Main.Plugin.Settings.LevelSettings.LevelPositionX,
-                Main.Plugin.Settings.LevelSettings.LevelPositionY),
+            Main.Plugin.Graphics, lines, new Vector2(Main.Plugin.Settings.LevelSettings.LevelPositionX, Main.Plugin.Settings.LevelSettings.LevelPositionY),
             Main.Plugin.Settings.LevelSettings.TextColor);
     }
 }

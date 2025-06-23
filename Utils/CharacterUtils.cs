@@ -11,17 +11,12 @@ public static class CharacterUtils
 
     public static double CalculateProgress(int level, long experience)
     {
-        return level != 100
-            ? (experience - (double)PlayerExperience.TotalExperience[level])
-            / PlayerExperience.NextExperience[level] * 100.0
-            : 0.0;
+        return level != 100 ? (experience - (double)PlayerExperience.TotalExperience[level]) / PlayerExperience.NextExperience[level] * 100.0 : 0.0;
     }
 
     public static double GetLevelGainPercent(int level, long xpGained)
     {
-        return level == 100
-            ? 0.0
-            : Math.Round(xpGained * 100.0 / PlayerExperience.NextExperience[level], 2);
+        return level == 100 ? 0.0 : Math.Round(xpGained * 100.0 / PlayerExperience.NextExperience[level], 2);
     }
 
     public static int? GetRunsToNextLevel(int level, long xp, long xpGained)
@@ -29,10 +24,7 @@ public static class CharacterUtils
         if (xpGained <= 0 || level >= 100)
             return null;
         var progress = CalculateProgress(level, xp);
-        var runs = Math.Round(
-            (100.0 - progress) / 100.0 * PlayerExperience.NextExperience[level] / xpGained,
-            0
-        );
+        var runs = Math.Round((100.0 - progress) / 100.0 * PlayerExperience.NextExperience[level] / xpGained, 0);
         return !double.IsInfinity(runs) ? (int)runs : null;
     }
 
@@ -44,8 +36,7 @@ public static class CharacterUtils
         return !double.IsInfinity(runs) ? (int)runs : null;
     }
 
-    public static double? GetTimeToLevelSeconds(long xpGained, double timeElapsed,
-        int level, long playerXp)
+    public static double? GetTimeToLevelSeconds(long xpGained, double timeElapsed, int level, long playerXp)
     {
         if (xpGained <= 0 || timeElapsed <= 0 || level >= 100)
             return null;
@@ -62,16 +53,12 @@ public static class CharacterUtils
     public static string FormatTime(double seconds)
     {
         var t = TimeSpan.FromSeconds(seconds);
-        return t.TotalHours >= 1
-            ? $"{(int)t.TotalHours}h {t.Minutes}m"
-            : $"{t.Minutes}m {t.Seconds}s";
+        return t.TotalHours >= 1 ? $"{(int)t.TotalHours}h {t.Minutes}m" : $"{t.Minutes}m {t.Seconds}s";
     }
 
     public static string FormatElapsedTime(double timeElapsed)
     {
         var t = TimeSpan.FromSeconds(timeElapsed);
-        return t.TotalHours >= 1
-            ? $"{(int)t.TotalHours}:{t.Minutes:00}:{t.Seconds:00}"
-            : $"{t.Minutes}:{t.Seconds:00}";
+        return t.TotalHours >= 1 ? $"{(int)t.TotalHours}:{t.Minutes:00}:{t.Seconds:00}" : $"{t.Minutes}:{t.Seconds:00}";
     }
 }
