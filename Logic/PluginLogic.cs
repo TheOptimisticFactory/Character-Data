@@ -169,7 +169,7 @@ public static class PluginLogic
         {
             SnapshotTime = DateTimeOffset.Now.ToUnixTimeSeconds(),
             AreaTimeSeconds = timeElapsed,
-            Gold = new Gold { Start = _currentInstance.JoinGold, Gain = goldGained },
+            Gold = new Gold { Start = _currentInstance.JoinGold, Current = currentGold, Gain = goldGained },
             StartArea = new AreaData
             {
                 Name = _currentInstance.Area.Name,

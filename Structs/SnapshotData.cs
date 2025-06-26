@@ -15,6 +15,7 @@ public class SnapshotData
 public class Gold
 {
     public int Start { get; set; }
+    public int Current { get; set; }
     public int Gain { get; set; }
 }
 
