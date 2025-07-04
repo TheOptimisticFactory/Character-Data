@@ -251,9 +251,9 @@ public static class PluginLogic
     {
         return new RegenData
         {
-            Life = TryGetStat(GameStat.TotalLifeRecoveryPerMinuteFromRegeneration) / 60f,
-            ES = TryGetStat(GameStat.TotalEnergyShieldRecoveryPerMinuteFromRegeneration) / 60f,
-            Mana = TryGetStat(GameStat.TotalManaRecoveryPerMinuteFromRegeneration) / 60f
+            Life = TryGetStat(GameStat.LifeRecoveryPerMinute) / 60f,
+            ES = TryGetStat(GameStat.EnergyShieldRecoveryPerMinute) / 60f,
+            Mana = TryGetStat(GameStat.ManaRecoveryPerMinute) / 60f
         };
     }
 
