@@ -22,6 +22,7 @@ public class Settings : ISettings
     public ResistanceSettings ResistanceSettings { get; set; } = new();
     public GoldSettings GoldSettings { get; set; } = new();
     public DefenseSettings DefenseSettings { get; set; } = new();
+    public RegenSettings RegenSettings { get; set; } = new();
     public BackgroundSettings BackgroundSettings { get; set; } = new();
     public ToggleNode Enable { get; set; } = new(false);
 }
@@ -98,6 +99,24 @@ public class DefenseSettings
 
     public RangeNode<int> DefenseY { get; set; } = new(1286, 0, 4000);
 }
+[Submenu]
+public class RegenSettings
+{
+    public ToggleNode Enabled { get; set; } = new(false);
+
+    public ColorNode LifeColor { get; set; } =
+        System.Drawing.Color.FromArgb(255, 255, 85, 85).ToSharpDx();
+
+    public ColorNode ESColor { get; set; } =
+        System.Drawing.Color.FromArgb(255, 77, 160, 255).ToSharpDx();
+
+    public ColorNode ManaColor { get; set; } =
+        System.Drawing.Color.FromArgb(255, 77, 160, 255).ToSharpDx();
+
+    public RangeNode<int> RegenX { get; set; } = new(1063, 0, 4000);
+
+    public RangeNode<int> RegenY { get; set; } = new(1286, 0, 4000);
+}
 
 [Submenu]
 public class GoldSettings
@@ -121,7 +140,7 @@ public class ResistanceSettings
         System.Drawing.Color.FromArgb(255, 255, 85, 85).ToSharpDx();
 
     public ColorNode ColdResistanceColor { get; set; } =
-        System.Drawing.Color.FromArgb(255, 77, 134, 255).ToSharpDx();
+        System.Drawing.Color.FromArgb(255, 77, 204, 255).ToSharpDx();
 
     public ColorNode LightningResistanceColor { get; set; } =
         System.Drawing.Color.FromArgb(255, 253, 245, 75).ToSharpDx();

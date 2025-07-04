@@ -10,6 +10,7 @@ public class SnapshotData
     public PlayerData Player { get; set; }
     public ResistanceData Resistances { get; set; }
     public DefenseData Defenses { get; set; }
+    public RegenData Regen { get; set; }
 }
 
 public class Gold
@@ -99,4 +100,12 @@ public class EvasionData
 public class BlockData
 {
     public int AttackBlockPct { get; set; }
+    public int SpellBlockPct { get; set; }
+}
+
+public class RegenData
+{
+    public float Life { get; set; }
+    public float ES { get; set; }
+    public float Mana { get; set; }
 }

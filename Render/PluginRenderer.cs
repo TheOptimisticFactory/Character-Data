@@ -35,6 +35,7 @@ public static class PluginRenderer
         DrawBackground();
         DrawResistances();
         DrawDefenses();
+        DrawRegen();
         DrawExperienceData();
         DrawGold();
     }
@@ -94,7 +95,7 @@ public static class PluginRenderer
         {
             $"{"Armor:",-8}{snapshot.Defenses.Armor.DisplayReduction + "%",-5}" + $"({snapshot.Defenses.Armor.Rating:#,##0})",
             $"{"Evade:",-8}{snapshot.Defenses.Evasion.ChanceToEvade + "%",-5}" + $"({snapshot.Defenses.Evasion.Rating:#,##0})",
-            $"{"Block:",-8}{snapshot.Defenses.Block.AttackBlockPct + "%"}"
+            $"{"Block:",-8}{snapshot.Defenses.Block.AttackBlockPct + "%"} / {snapshot.Defenses.Block.SpellBlockPct + "%"}"
         };
 
         var colors = new[]
@@ -108,6 +109,30 @@ public static class PluginRenderer
             Main.Plugin.Graphics, lines, new Vector2(Main.Plugin.Settings.DefenseSettings.DefenseX, Main.Plugin.Settings.DefenseSettings.DefenseY), colors);
     }
 
+    private static void DrawRegen()
+    {
+        if (!Main.Plugin.Settings.RegenSettings.Enabled || PluginLogic.CurrentSnapshot == null)
+            return;
+
+        var snapshot = PluginLogic.CurrentSnapshot;
+
+        var lines = new[]
+        {
+            $"{"Life: ",-6}{snapshot.Regen.Life:#,##0.0}/s",
+            $"{"ES: ",-6}{snapshot.Regen.ES:#,##0.0}/s",
+            $"{"Mana: ",-6}{snapshot.Regen.Mana:#,##0.0}/s"
+        };
+
+        var colors = new[]
+        {
+            Main.Plugin.Settings.RegenSettings.LifeColor.Value,
+            Main.Plugin.Settings.RegenSettings.ESColor.Value,
+            Main.Plugin.Settings.RegenSettings.ManaColor.Value
+        };
+
+        TextRenderHelper.DrawMultilineText(
+            Main.Plugin.Graphics, lines, new Vector2(Main.Plugin.Settings.RegenSettings.RegenX, Main.Plugin.Settings.RegenSettings.RegenY), colors);
+    }
 
     private static void DrawGold()
     {

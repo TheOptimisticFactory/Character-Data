@@ -197,7 +197,8 @@ public static class PluginLogic
                 Kills = new KillsData { Total = currentKills, Area = areaKills }
             },
             Resistances = CreateResistanceData(),
-            Defenses = CreateDefenseData()
+            Defenses = CreateDefenseData(),
+            Regen = CreateRegenData()
         };
     }
 
@@ -240,8 +241,19 @@ public static class PluginLogic
             },
             Block = new BlockData
             {
-                AttackBlockPct = TryGetStat(GameStat.AttackBlockPct)
+                AttackBlockPct = TryGetStat(GameStat.AttackBlockPct),
+                SpellBlockPct = TryGetStat(GameStat.SpellBlockPct)
             }
+        };
+    }
+
+    private static RegenData CreateRegenData()
+    {
+        return new RegenData
+        {
+            Life = TryGetStat(GameStat.TotalLifeRecoveryPerMinuteFromRegeneration) / 60f,
+            ES = TryGetStat(GameStat.TotalEnergyShieldRecoveryPerMinuteFromRegeneration) / 60f,
+            Mana = TryGetStat(GameStat.TotalManaRecoveryPerMinuteFromRegeneration) / 60f
         };
     }
 
